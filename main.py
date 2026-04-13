@@ -33,7 +33,6 @@ for i in range(len(matriz)): #percorre as linhas da matriz
 
 menor_distancia = float("inf")
 melhor_rota = None
-print(simular_dist((1,1),(4,0)))
 
 for ordem in permutations(cidades):
     distancia_total = 0
@@ -65,7 +64,3 @@ for ordem in permutations(cidades):
 print("Melhor rota:", ("R",) + melhor_rota + ("R",))
 print("Menor distância:", menor_distancia)
 
-#print(f"{matriz}\n")
-#print(f"{coordenadas}\n")
-#print(f"{cidades}\n")
-#print(origem)

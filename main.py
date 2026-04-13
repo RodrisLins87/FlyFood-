@@ -37,7 +37,7 @@ melhor_rota = None
 for ordem in permutations(cidades):
     distancia_total = 0
     
-    # origem -> primeira cidade
+    
     distancia_total += simular_dist(
     origem,
     coordenadas[ordem[0]]

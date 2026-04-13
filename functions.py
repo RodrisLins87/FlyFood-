@@ -1,4 +1,4 @@
-def simular_dist(p1, p2):
+def simular_dist(p1, p2): #Declaração da função para simular movimentos
     x1, y1 = p1
     x2, y2 = p2
 

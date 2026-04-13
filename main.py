@@ -43,14 +43,14 @@ for ordem in permutations(cidades):
     coordenadas[ordem[0]]
 )
     
-    # entre cidades
+
     for i in range(len(ordem) - 1):
         distancia_total += simular_dist(
             coordenadas[ordem[i]],
             coordenadas[ordem[i+1]]
         )
     
-    # última cidade -> origem
+    
     distancia_total += simular_dist(
     coordenadas[ordem[-1]],
     origem

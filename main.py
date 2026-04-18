@@ -1,5 +1,6 @@
 from itertools import permutations #Importa a função de permutação
 from functions import simular_dist #Importa a função que calcula a distância
+import time 
 
 matriz=[] #Define a matriz 
 cidades=[] #lista que será adicionada as cidades
@@ -34,6 +35,8 @@ for i in range(len(matriz)): #percorre as linhas da matriz
 menor_distancia = float("inf")
 melhor_rota = None
 
+inicio = time.time()
+
 for ordem in permutations(cidades):
     distancia_total = 0
     
@@ -61,6 +64,10 @@ for ordem in permutations(cidades):
         menor_distancia = distancia_total
         melhor_rota = ordem
 
+fim = time.time()
+tempo_total = fim - inicio
+
 print("Melhor rota:", ("R",) + melhor_rota + ("R",))
 print("Menor distância:", menor_distancia)
+print(f"Tempo de execução: {tempo_total:.4f} segundos")
 

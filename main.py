@@ -28,41 +28,46 @@ for i in range(len(matriz)): #percorre as linhas da matriz
         if valor == "R": #Acha o ponto de origem e retorno e adiciona na variável "origem", que anteriormente estava vazia
             origem = (i, j)
 
+
+
         elif valor != "0": 
             cidades.append(valor)   
             coordenadas[valor] = (i, j)
 
-menor_distancia = float("inf")
+menor_distancia = float("inf") #Pior caso
 melhor_rota = None
 
 inicio = time.time()
 
-for ordem in permutations(cidades):
-    distancia_total = 0
+for ordem in permutations(cidades): #Usamos a função importada para permutar e conseguir todas as ordens possíveis das cidades
+    distancia_total = 0 #Toda vez que inicia-se uma nova rota, a distância tem que ser zerada 
     
-    
+#Bloco da origem para primeira cidade da ordem 
+
     distancia_total += simular_dist(
     origem,
     coordenadas[ordem[0]]
 )
     
+#Bloco das cidades consecutivas 
 
     for i in range(len(ordem) - 1):
         distancia_total += simular_dist(
-            coordenadas[ordem[i]],
-            coordenadas[ordem[i+1]]
+            coordenadas[ordem[i]], #Atual cidade
+            coordenadas[ordem[i+1]] #Próxima cidade
         )
     
-    
+#Voltando para origem
+
     distancia_total += simular_dist(
-    coordenadas[ordem[-1]],
+    coordenadas[ordem[-1]], #Última cidade 
     origem
 )
     
     
-    if distancia_total < menor_distancia:
-        menor_distancia = distancia_total
-        melhor_rota = ordem
+    if distancia_total < menor_distancia: #Verifica se a rota atual é menor que a menor rota já encontrada
+        menor_distancia = distancia_total #Se for, substitui pela nova rota
+        melhor_rota = ordem #E salva a ordem desta permutação na variável melhor rota
 
 fim = time.time()
 tempo_total = fim - inicio
@@ -70,4 +75,6 @@ tempo_total = fim - inicio
 print("Melhor rota:", ("R",) + melhor_rota + ("R",))
 print("Menor distância:", menor_distancia)
 print(f"Tempo de execução: {tempo_total:.4f} segundos")
+print(f"Tempo: {tempo_total/60:.2f} minutos")
 
+  

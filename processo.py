@@ -3,6 +3,7 @@
 
 import random
 import time
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -14,7 +15,7 @@ from deap import base, creator, tools
 distancias = {}
 todos_valores = []
 
-with open("brazil58.tsp", "r") as objArq:  # Mantendo o nome do arquivo que você usa
+with open("brazil58.tsp", "r") as objArq:
     for line in objArq:
         line = line.strip()
         if not line or "NAME" in line or "TYPE" in line or "COMMENT" in line or "DIMENSION" in line or "EDGE_WEIGHT" in line:
@@ -121,95 +122,84 @@ toolbox.register("select",  tools.selTournament, tournsize=3)
 # =============================================================================
 # 4. PARÂMETROS PARA 13 CIDADES
 # =============================================================================
-SEED               = 42       
-NUM_CITIES         = n
-POP_SIZE           = int(NUM_CITIES * 1.5)   # ~19 indivíduos
-CXPB               = 0.9      
-MUTPB              = 0.2      
-NGEN               = 1000     
-K_SELECTION        = 750      
-NUM_EXECUCOES      = 10       
+SEED        = 42
+NUM_CITIES  = n
+POP_SIZE    = int(NUM_CITIES * 1.5)   # ~19 indivíduos
+CXPB        = 0.9
+MUTPB       = 0.2
+NGEN        = 1000
+K_SELECTION = 750
 
 
 # =============================================================================
-# 5. EXECUÇÃO
-# =============================================================================
-def executar_uma_vez(seed_offset=0):
-    random.seed(SEED + seed_offset)
-    np.random.seed(SEED + seed_offset)
-
-    populacao = toolbox.population(n=POP_SIZE)
-
-    fitnesses = list(map(toolbox.evaluate, populacao))
-    for ind, fit in zip(populacao, fitnesses):
-        ind.fitness.values = fit
-
-    historico_media = []
-    historico_min   = []
-
-    for gen in range(NGEN):
-        offspring = toolbox.select(populacao, K_SELECTION)
-        offspring = list(map(toolbox.clone, offspring))
-
-        for child1, child2 in zip(offspring[::2], offspring[1::2]):
-            if random.random() < CXPB:
-                toolbox.mate(child1, child2)
-                del child1.fitness.values
-                del child2.fitness.values
-
-        for mutant in offspring:
-            if random.random() < MUTPB:
-                toolbox.mutate(mutant)
-                del mutant.fitness.values
-
-        invalidos = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses  = list(map(toolbox.evaluate, invalidos))
-        for ind, fit in zip(invalidos, fitnesses):
-            ind.fitness.values = fit
-
-        populacao[:] = offspring
-
-        fits = [ind.fitness.values[0] for ind in populacao]
-        historico_media.append(sum(fits) / len(fits))
-        historico_min.append(min(fits))
-
-    melhor = tools.selBest(populacao, 1)[0]
-    return melhor, historico_media, historico_min
-
-
-# =============================================================================
-# 6. MÚLTIPLAS EXECUÇÕES
+# 5. EXECUÇÃO ÚNICA COM TEMPORIZADOR
 # =============================================================================
 CIDADE_ORIGEM = random.choice(cidades_lista)
 print(f"Cidade de origem sorteada para o relatório: {CIDADE_ORIGEM}\n")
 print("=" * 55)
+print("Iniciando execução...\n")
 
-melhor_global       = None
-melhor_distancia    = float("inf")
-melhor_historico_media = []
-melhor_historico_min   = []
+random.seed(SEED)
+np.random.seed(SEED)
+
+populacao = toolbox.population(n=POP_SIZE)
+
+fitnesses = list(map(toolbox.evaluate, populacao))
+for ind, fit in zip(populacao, fitnesses):
+    ind.fitness.values = fit
+
+historico_media = []
+historico_min   = []
 
 inicio = time.time()
 
-for execucao in range(NUM_EXECUCOES):
-    rota, hist_media, hist_min = executar_uma_vez(seed_offset=execucao)
-    dist = calcular_distancia_rota(rota)
-    print(f"Execução {execucao + 1:2d} | Distância: {dist:6} | Fitness: {1/dist:.8f}")
+for gen in range(NGEN):
+    # --- Temporizador em tempo real ---
+    elapsed = time.time() - inicio
+    melhor_atual = min(ind.fitness.values[0] for ind in populacao)
+    sys.stdout.write(
+        f"\r  Geração {gen + 1:4d}/{NGEN} | "
+        f"Melhor: {melhor_atual:6} | "
+        f"Tempo: {elapsed:.2f}s"
+    )
+    sys.stdout.flush()
 
-    if dist < melhor_distancia:
-        melhor_distancia       = dist
-        melhor_global          = list(rota)
-        melhor_historico_media = hist_media
-        melhor_historico_min   = hist_min
+    # --- Evolução ---
+    offspring = toolbox.select(populacao, K_SELECTION)
+    offspring = list(map(toolbox.clone, offspring))
+
+    for child1, child2 in zip(offspring[::2], offspring[1::2]):
+        if random.random() < CXPB:
+            toolbox.mate(child1, child2)
+            del child1.fitness.values
+            del child2.fitness.values
+
+    for mutant in offspring:
+        if random.random() < MUTPB:
+            toolbox.mutate(mutant)
+            del mutant.fitness.values
+
+    invalidos  = [ind for ind in offspring if not ind.fitness.valid]
+    fitnesses  = list(map(toolbox.evaluate, invalidos))
+    for ind, fit in zip(invalidos, fitnesses):
+        ind.fitness.values = fit
+
+    populacao[:] = offspring
+
+    fits = [ind.fitness.values[0] for ind in populacao]
+    historico_media.append(sum(fits) / len(fits))
+    historico_min.append(min(fits))
 
 fim = time.time()
+print()  # quebra de linha após o temporizador
 
 # =============================================================================
-# 7. RESULTADO FINAL (IMPRESSÃO DA MELHOR ROTA)
+# 6. RESULTADO FINAL
 # =============================================================================
-# Reorganiza a melhor rota global para começar a partir da CIDADE_ORIGEM escolhida
+melhor_global    = list(tools.selBest(populacao, 1)[0])
+melhor_distancia = calcular_distancia_rota(melhor_global)
+
 rota_ordenada = normalizar_para_origem(melhor_global, CIDADE_ORIGEM)
-# Adiciona a origem no final para fechar o ciclo de retorno do caixeiro viajante
 rota_completa = rota_ordenada + [CIDADE_ORIGEM]
 
 print("\n" + "=" * 55)
@@ -225,11 +215,11 @@ print(f" 🚩 {' ➡️ '.join(map(str, rota_completa))} 🏁")
 print("=" * 55)
 
 # =============================================================================
-# 8. GRÁFICO DE CONVERGÊNCIA
+# 7. GRÁFICO DE CONVERGÊNCIA
 # =============================================================================
 fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(range(len(melhor_historico_media)), melhor_historico_media, "b-", label="Média da população", alpha=0.7)
-ax.plot(range(len(melhor_historico_min)),  melhor_historico_min, "r-", label="Melhor da geração", alpha=0.9)
+ax.plot(range(len(historico_media)), historico_media, "b-", label="Média da população", alpha=0.7)
+ax.plot(range(len(historico_min)),  historico_min,   "r-", label="Melhor da geração",  alpha=0.9)
 ax.set_xlabel("Geração")
 ax.set_ylabel("Distância total")
 ax.set_title(f"Convergência do AG — (Melhor rota: {melhor_distancia})")

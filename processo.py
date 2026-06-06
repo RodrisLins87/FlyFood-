@@ -214,16 +214,5 @@ print("Fluxo do Percurso:")
 print(f" 🚩 {' ➡️ '.join(map(str, rota_completa))} 🏁")
 print("=" * 55)
 
-# =============================================================================
-# 7. GRÁFICO DE CONVERGÊNCIA
-# =============================================================================
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(range(len(historico_media)), historico_media, "b-", label="Média da população", alpha=0.7)
-ax.plot(range(len(historico_min)),  historico_min,   "r-", label="Melhor da geração",  alpha=0.9)
-ax.set_xlabel("Geração")
-ax.set_ylabel("Distância total")
-ax.set_title(f"Convergência do AG — (Melhor rota: {melhor_distancia})")
-ax.legend()
-plt.tight_layout()
-plt.savefig("convergencia.png", dpi=150)
-plt.show()
+
+

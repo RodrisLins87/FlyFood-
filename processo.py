@@ -1,22 +1,21 @@
-# -*- coding: utf-8 -*-
-# Adaptado para Brazil13 com a matriz UPPER_ROW fornecida e impressão detalhada de rotas
-
 import random
 import time
 import sys
-import numpy as np
-import matplotlib.pyplot as plt
+import numpy as np #Garante reprodutibilidade 
 
-from deap import base, creator, tools
+
+from deap import base, creator, tools #Framework evolutivo
 
 # =============================================================================
 # 1. CARREGAMENTO DA MATRIZ DE DISTÂNCIAS (UPPER_ROW - Brazil13)
 # =============================================================================
-distancias = {}
-todos_valores = []
+distancias = {} #Declara dicionário 
+todos_valores = [] #Declara lista 
 
+ 
+ #Abre o arquivo em modo leitura(que contém as distâncias entre cidades no formato UPPER_ROW)
 with open("brazil58.tsp", "r") as objArq:
-    for line in objArq:
+    for line in objArq: #Esse for percorre os valores e os adiciona na lista "todos_valores"
         line = line.strip()
         if not line or "NAME" in line or "TYPE" in line or "COMMENT" in line or "DIMENSION" in line or "EDGE_WEIGHT" in line:
             continue
@@ -24,18 +23,20 @@ with open("brazil58.tsp", "r") as objArq:
             break
         todos_valores.extend(line.split())
 
-n = 13
+n = 13 #Caso para comparação de teste, só lê as 13 primeiras cidades 
 idx = 0
 
-for i in range(1, n + 1):
+#Preenche o dicionário 
+
+for i in range(1, n + 1): #Percorre "indo" i-->j
     distancias[(i, i)] = 0
-    for j in range(i + 1, n + 1):
+    for j in range(i + 1, n + 1): #Percorre "voltando" j-->i
         if idx < len(todos_valores):
             peso = int(todos_valores[idx])
             idx += 1
         else:
             peso = 0
-        distancias[(i, j)] = peso
+        distancias[(i, j)] = peso #A distância de i-->j ou j--> é a mesma
         distancias[(j, i)] = peso
 
 print(f"Sucesso: Matriz de distâncias para {n} cidades carregada corretamente!\n")
@@ -44,12 +45,14 @@ print(f"Sucesso: Matriz de distâncias para {n} cidades carregada corretamente!\
 # 2. FUNÇÕES AUXILIARES
 # =============================================================================
 def calcular_distancia_rota(rota):
+    """Soma todas as distâncias entre as cidades da rota e volta a origem"""
     total = sum(distancias[(rota[i], rota[i + 1])] for i in range(len(rota) - 1))
     total += distancias[(rota[-1], rota[0])]
     return total
 
 
-def canonizar_rota(rota):
+def canonizar_rota(rota): #começa pela menor cidade, e o segundo elemento é menor que o último
+    """Evita contar a mesma rota duas vezes com pontos de partidas diferentes"""
     idx_min = rota.index(min(rota))
     rota = rota[idx_min:] + rota[:idx_min]
     if len(rota) > 1 and rota[1] > rota[-1]:
@@ -58,6 +61,8 @@ def canonizar_rota(rota):
 
 
 def normalizar_para_origem(rota, origem):
+    """Usa 'canonizar_rota' e depois rotaciona a rota para que ela comece 
+    pela cidade sorteada como origem, útil só para a exibição final."""
     rota_canon = canonizar_rota(rota)
     idx = rota_canon.index(origem)
     return rota_canon[idx:] + rota_canon[:idx]
@@ -124,17 +129,17 @@ toolbox.register("select",  tools.selTournament, tournsize=3)
 # =============================================================================
 SEED        = 42
 NUM_CITIES  = n
-POP_SIZE    = int(NUM_CITIES * 1.5)   # ~19 indivíduos
-CXPB        = 0.9
-MUTPB       = 0.2
-NGEN        = 1000
-K_SELECTION = 750
+POP_SIZE    = int(NUM_CITIES * 1.5)   # ~19 indivíduos (Número de rotas na população)
+CXPB        = 0.9 #90% de chance de dois indivíduos se cruzarem
+MUTPB       = 0.2 #20% de chance de um indivíduo sofrer mutação
+NGEN        = 1000 #Número de gerações
+K_SELECTION = 750 #Quantos indivíduos são selecionados por geração
 
 
 # =============================================================================
 # 5. EXECUÇÃO ÚNICA COM TEMPORIZADOR
 # =============================================================================
-CIDADE_ORIGEM = random.choice(cidades_lista)
+CIDADE_ORIGEM = random.choice(cidades_lista) #Cidade aleatória é escolhida como ponto de origem e retorno
 print(f"Cidade de origem sorteada para o relatório: {CIDADE_ORIGEM}\n")
 print("=" * 55)
 print("Iniciando execução...\n")
@@ -213,6 +218,8 @@ print("-" * 55)
 print("Fluxo do Percurso:")
 print(f" 🚩 {' ➡️ '.join(map(str, rota_completa))} 🏁")
 print("=" * 55)
+
+
 
 
 
